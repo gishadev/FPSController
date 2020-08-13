@@ -12,19 +12,22 @@ public class PlayerController : MonoBehaviour
     [Space]
     public float jumpForce = 7f;
     public float gravityMultiplier = 2.5f;
-
+    [Space]
+    [Range(0f, 1f)] public float airMovementMultiplier = 0.5f;
+    float movementMultiplier = 1f;
     [Header("Ground Checker")]
     public Transform groundChecker;
     public float checkerRadius;
     public LayerMask groundMask;
 
     Vector3 velocity;
+    Vector3 moveInput;
+    float nowMoveSpeed;
 
-    bool isGrounded;
-    bool isSprinting;
+    bool isSprinting = false;
 
-    float horizontalAxis;
-    float verticalAxis;
+    float hInput;
+    float vInput;
 
     void Awake()
     {
@@ -33,46 +36,62 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        MovementInput();
+        hInput = Input.GetAxis("Horizontal");
+        vInput = Input.GetAxis("Vertical");
+
+        isSprinting = Input.GetKey(KeyCode.LeftShift);
+
+        // Jumping.
+        if (Input.GetButtonDown("Jump") && IsGrounded())
+            Jump();
     }
+
     void FixedUpdate()
     {
         Movement();
     }
 
-    void MovementInput()
-    {
-        horizontalAxis = Input.GetAxis("Horizontal");
-        verticalAxis = Input.GetAxis("Vertical");
-
-        if (Input.GetButtonDown("Jump") && isGrounded)
-            Jump();
-
-        isSprinting = Input.GetKey(KeyCode.LeftShift);
-    }
-
     void Movement()
     {
-        isGrounded = Physics.CheckSphere(groundChecker.position, checkerRadius, groundMask);
-
-        // Grounded Physics.
-        if (isGrounded && velocity.y < 0f)
+        // When player on ground.
+        if (IsGrounded() && velocity.y < 0f)
         {
-            velocity.y = -2f;
-            controller.slopeLimit = 45.0f;
+            velocity = new Vector3(0f, -2f, 0f);
+            controller.slopeLimit = 50f;
         }
 
-        float moveSpeed = !isSprinting ? walkSpeed : sprintSpeed;
-        Vector3 movement = transform.right * horizontalAxis + transform.forward * verticalAxis;
-        controller.Move(movement * moveSpeed * Time.deltaTime);
+        // Variable to control moveSpeed;
+        movementMultiplier = IsGrounded() ? 1f : airMovementMultiplier;
+        nowMoveSpeed = !isSprinting ? walkSpeed : sprintSpeed;
 
+        moveInput = transform.forward * vInput + transform.right * hInput;
+
+        controller.Move(Vector3.ClampMagnitude(moveInput, 1f) * nowMoveSpeed * movementMultiplier * Time.deltaTime);
+
+        // Applying gravity to player controller.
         velocity.y += gravity * gravityMultiplier * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
     }
 
     void Jump()
     {
-        velocity.y = Mathf.Sqrt(jumpForce * -2f * gravity);
+        velocity = CalculateAirVelocity(moveInput * nowMoveSpeed);
         controller.slopeLimit = 90f;
+    }
+
+    bool IsGrounded()
+    {
+        return Physics.CheckSphere(groundChecker.position, checkerRadius, groundMask);
+    }
+
+    Vector3 CalculateAirVelocity(Vector3 moveVel)
+    {
+        Vector3 vel;
+
+        vel.x = moveVel.x;
+        vel.y = Mathf.Sqrt(jumpForce * -2f * gravity);
+        vel.z = moveVel.z;
+
+        return vel;
     }
 }

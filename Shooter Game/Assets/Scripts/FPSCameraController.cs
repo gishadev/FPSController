@@ -16,8 +16,8 @@ public class FPSCameraController : MonoBehaviour
     void FixedUpdate()
     {
         // Camera Input.
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.fixedDeltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.fixedDeltaTime;
 
         // Camera/Body Rotating.
         xRot -= mouseY;
