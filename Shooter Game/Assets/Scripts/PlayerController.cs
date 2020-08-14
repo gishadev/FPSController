@@ -7,24 +7,32 @@ public class PlayerController : MonoBehaviour
     private CharacterController controller;
     public const float gravity = -9.81f;
 
-    public float walkSpeed = 7f;
-    public float sprintSpeed = 7f;
-    [Space]
-    public float jumpForce = 7f;
-    public float gravityMultiplier = 2.5f;
+    public float walkSpeed = 7.5f;
+    public float sprintSpeed = 11f;
+    public float jumpForce = 10f;
+    public float gravityMultiplier = 4.5f;
     [Space]
     [Range(0f, 1f)] public float airMovementMultiplier = 0.5f;
-    float movementMultiplier = 1f;
-    [Header("Ground Checker")]
+    [Range(0f, 1f)] public float crouchMovementMultiplier = 0.5f;
+    float nowJumpMultiplier = 1f;
+    //private float nowMovementMultiplier = 1f;
+    [Space]
+    public float crouchSmothness;
+    public float crouchHeight = 0.5f;
+    // float defaultHeight;
+
+    [Header("Checkers")]
     public Transform groundChecker;
-    public float checkerRadius;
+    public float groundCheckerRadius = 0.45f;
     public LayerMask groundMask;
 
+    float nowMoveSpeed;
     Vector3 velocity;
     Vector3 moveInput;
-    float nowMoveSpeed;
 
-    bool isSprinting = false;
+    bool isGrounded;
+    bool isSprinting;
+    bool isCrouching;
 
     float hInput;
     float vInput;
@@ -36,14 +44,22 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        // Input //
         hInput = Input.GetAxis("Horizontal");
         vInput = Input.GetAxis("Vertical");
 
-        isSprinting = Input.GetKey(KeyCode.LeftShift);
+        isGrounded = CheckGroundCollider();
+        isSprinting = Input.GetKey(KeyCode.LeftShift) && !isCrouching;
 
-        // Jumping.
-        if (Input.GetButtonDown("Jump") && IsGrounded())
+        // Jumping //
+        if (Input.GetButtonDown("Jump") && isGrounded)
             Jump();
+
+        // Crouching //
+        if (Input.GetKeyDown(KeyCode.LeftControl))
+            SetCrouch(true);
+        if (Input.GetKeyUp(KeyCode.LeftControl))
+            SetCrouch(false);
     }
 
     void FixedUpdate()
@@ -53,45 +69,114 @@ public class PlayerController : MonoBehaviour
 
     void Movement()
     {
-        // When player on ground.
-        if (IsGrounded() && velocity.y < 0f)
+        // When player is on ground.
+        if (isGrounded && velocity.y < 0f)
         {
-            velocity = new Vector3(0f, -2f, 0f);
+            velocity = Vector3.up * -2f;
             controller.slopeLimit = 50f;
         }
 
         // Variable to control moveSpeed;
-        movementMultiplier = IsGrounded() ? 1f : airMovementMultiplier;
         nowMoveSpeed = !isSprinting ? walkSpeed : sprintSpeed;
 
         moveInput = transform.forward * vInput + transform.right * hInput;
 
-        controller.Move(Vector3.ClampMagnitude(moveInput, 1f) * nowMoveSpeed * movementMultiplier * Time.deltaTime);
+        controller.Move(Vector3.ClampMagnitude(moveInput, 1f) * nowMoveSpeed * GetMovementMultiplier() * Time.deltaTime);
 
         // Applying gravity to player controller.
         velocity.y += gravity * gravityMultiplier * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
     }
 
+    #region Actions
+    void SetCrouch(bool state)
+    {
+        isCrouching = state;
+
+        if (isCrouching)
+        {
+            StartCoroutine(CrouchCoroutine());
+            nowJumpMultiplier = 0.5f;
+        }
+
+        else
+        {
+            StartCoroutine(UnCrouchCoroutine());
+            nowJumpMultiplier = 1f;
+        }
+
+    }
+
+    #region Crouch Coroutines
+    IEnumerator CrouchCoroutine()
+    {
+        float vel = 0;
+
+        while (isCrouching && !Input.GetKeyUp(KeyCode.LeftControl))
+        {
+            float scaleY = Mathf.SmoothDamp(transform.localScale.y, crouchHeight, ref vel, crouchSmothness);
+            float value = transform.localScale.y - scaleY;
+            Vector3 pos = -Vector3.up * value;
+
+            transform.localScale = new Vector3(1f, scaleY, 1f);
+            transform.position += pos;
+
+            yield return null;
+        }
+    }
+
+    IEnumerator UnCrouchCoroutine()
+    {
+        float vel = 0;
+
+        while (!isCrouching && !Input.GetKeyDown(KeyCode.LeftControl))
+        {
+            float scaleY = Mathf.SmoothDamp(transform.localScale.y, 1f, ref vel, crouchSmothness);
+            float value = transform.localScale.y - scaleY;
+            Vector3 pos = -Vector3.up * value;
+
+            transform.localScale = new Vector3(1f, scaleY, 1f);
+            transform.position += pos;
+
+            yield return null;
+        }
+    }
+    #endregion
+
     void Jump()
     {
-        velocity = CalculateAirVelocity(moveInput * nowMoveSpeed);
+        velocity = CalculateJumpVelocity(moveInput * nowMoveSpeed);
         controller.slopeLimit = 90f;
     }
+    #endregion
 
-    bool IsGrounded()
+    #region Collider Checkers
+    bool CheckGroundCollider()
     {
-        return Physics.CheckSphere(groundChecker.position, checkerRadius, groundMask);
+        return Physics.CheckSphere(groundChecker.position, groundCheckerRadius, groundMask);
     }
+    #endregion
 
-    Vector3 CalculateAirVelocity(Vector3 moveVel)
+    Vector3 CalculateJumpVelocity(Vector3 moveVel)
     {
         Vector3 vel;
 
-        vel.x = moveVel.x;
-        vel.y = Mathf.Sqrt(jumpForce * -2f * gravity);
-        vel.z = moveVel.z;
+        vel.x = moveVel.x * GetMovementMultiplier();
+        vel.y = Mathf.Sqrt((jumpForce * nowJumpMultiplier) * -2f * gravity);
+        vel.z = moveVel.z * GetMovementMultiplier();
 
         return vel;
+    }
+
+    float GetMovementMultiplier()
+    {
+        float n1 = 1f, n2 = 1f;
+
+        if (!isGrounded)
+            n1 = airMovementMultiplier;
+        if (isCrouching)
+            n2 = crouchMovementMultiplier;
+
+        return n1 * n2;
     }
 }
