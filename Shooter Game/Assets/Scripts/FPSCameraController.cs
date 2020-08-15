@@ -3,6 +3,7 @@
 public class FPSCameraController : MonoBehaviour
 {
     public Transform body;
+    public Animator animator;
 
     public float mouseSensitivity;
 
@@ -27,5 +28,15 @@ public class FPSCameraController : MonoBehaviour
 
         yRot = mouseX;
         body.Rotate(Vector3.up * yRot);
+    }
+
+    public void SetCameraShakeState(int state)
+    {
+        animator.SetInteger("State", state);
+    }
+
+    public void TriggerShake(string name)
+    {
+        animator.SetTrigger(name);
     }
 }

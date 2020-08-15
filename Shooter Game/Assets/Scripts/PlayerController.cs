@@ -4,6 +4,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Controller")]
+    public FPSCameraController fpsCamera;
     private CharacterController controller;
     public const float gravity = -9.81f;
 
@@ -25,12 +26,16 @@ public class PlayerController : MonoBehaviour
     public Transform groundChecker;
     public float groundCheckerRadius = 0.45f;
     public LayerMask groundMask;
+    public float slopeForce;
+    public float slopeForceRayLength;
 
+    // Private Vars //
     float nowMoveSpeed;
     Vector3 velocity;
     Vector3 moveInput;
 
     bool isGrounded;
+    bool isJumping;
     bool isSprinting;
     bool isCrouching;
 
@@ -51,6 +56,8 @@ public class PlayerController : MonoBehaviour
         isGrounded = CheckGroundCollider();
         isSprinting = Input.GetKey(KeyCode.LeftShift) && !isCrouching;
 
+        PlayerStateAnimation();
+
         // Jumping //
         if (Input.GetButtonDown("Jump") && isGrounded)
             Jump();
@@ -69,22 +76,33 @@ public class PlayerController : MonoBehaviour
 
     void Movement()
     {
-        // When player is on ground.
+        float slopeMultiplier;
+        // When player is on ground //
         if (isGrounded && velocity.y < 0f)
         {
+            if (isJumping)
+                isJumping = false;
+
             velocity = Vector3.up * -2f;
             controller.slopeLimit = 50f;
         }
 
-        // Variable to control moveSpeed;
+        // Variable to control moveSpeed //
         nowMoveSpeed = !isSprinting ? walkSpeed : sprintSpeed;
 
         moveInput = transform.forward * vInput + transform.right * hInput;
 
         controller.Move(Vector3.ClampMagnitude(moveInput, 1f) * nowMoveSpeed * GetMovementMultiplier() * Time.deltaTime);
 
-        // Applying gravity to player controller.
-        velocity.y += gravity * gravityMultiplier * Time.deltaTime;
+        // Applying gravity to player controller //
+
+        // If On Slope => Additional scale for gravity to reduce "bouncing" bug.
+        if (IsOnSlope())
+            slopeMultiplier = slopeForce;
+        else
+            slopeMultiplier = 1f;
+
+        velocity.y += gravity * gravityMultiplier * slopeMultiplier * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
     }
 
@@ -97,6 +115,8 @@ public class PlayerController : MonoBehaviour
         {
             StartCoroutine(CrouchCoroutine());
             nowJumpMultiplier = 0.5f;
+
+            fpsCamera.TriggerShake("Crouch");
         }
 
         else
@@ -145,18 +165,35 @@ public class PlayerController : MonoBehaviour
 
     void Jump()
     {
+        isJumping = true;
         velocity = CalculateJumpVelocity(moveInput * nowMoveSpeed);
         controller.slopeLimit = 90f;
+
+        fpsCamera.TriggerShake("Jump");
     }
     #endregion
 
-    #region Collider Checkers
+    #region Checkers
     bool CheckGroundCollider()
     {
         return Physics.CheckSphere(groundChecker.position, groundCheckerRadius, groundMask);
     }
+
+    bool IsOnSlope()
+    {
+        if (!isGrounded || isJumping)
+            return false;
+
+        RaycastHit hitInfo;
+
+        if (Physics.Raycast(groundChecker.position, Vector3.down, out hitInfo, slopeForceRayLength))
+            if (hitInfo.normal != Vector3.up)
+                return true;
+        return false;
+    }
     #endregion
 
+    #region Calculations
     Vector3 CalculateJumpVelocity(Vector3 moveVel)
     {
         Vector3 vel;
@@ -179,4 +216,37 @@ public class PlayerController : MonoBehaviour
 
         return n1 * n2;
     }
+    #endregion
+
+    #region Animator
+    void PlayerStateAnimation()
+    {
+        int state;
+
+        if (isJumping || !isGrounded)
+        {
+            fpsCamera.SetCameraShakeState((int)State.Idle);
+            return;
+        }
+
+        if (hInput == 0f && vInput == 0)
+            state = (int)State.Idle;
+        else
+        {
+            if (isSprinting)
+                state = (int)State.Run;
+            else
+                state = (int)State.Walk;
+        }
+
+        fpsCamera.SetCameraShakeState(state);
+    }
+    #endregion
+}
+
+public enum State
+{
+    Idle,
+    Walk,
+    Run
 }
