@@ -11176,6 +11176,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 6773269565787940262, guid: 2d34ed76c0ca63447938b9c32d2452e7, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8518274837142395482, guid: 2d34ed76c0ca63447938b9c32d2452e7, type: 3}
       propertyPath: m_Name
       value: Player
@@ -11222,34 +11226,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8518274837142395484, guid: 2d34ed76c0ca63447938b9c32d2452e7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8518274838277107677, guid: 2d34ed76c0ca63447938b9c32d2452e7, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8518274838277107677, guid: 2d34ed76c0ca63447938b9c32d2452e7, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8518274838277107677, guid: 2d34ed76c0ca63447938b9c32d2452e7, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8518274838277107677, guid: 2d34ed76c0ca63447938b9c32d2452e7, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8518274838277107677, guid: 2d34ed76c0ca63447938b9c32d2452e7, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8518274838277107677, guid: 2d34ed76c0ca63447938b9c32d2452e7, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8518274838277107677, guid: 2d34ed76c0ca63447938b9c32d2452e7, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

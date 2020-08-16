@@ -5,6 +5,7 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Controller")]
     public FPSCameraController fpsCamera;
+    public MeleeWeapon melee;
     private CharacterController controller;
     public const float gravity = -9.81f;
 
@@ -67,6 +68,10 @@ public class PlayerController : MonoBehaviour
             SetCrouch(true);
         if (Input.GetKeyUp(KeyCode.LeftControl))
             SetCrouch(false);
+
+        // Melee Weapon //
+        if (Input.GetKeyDown(KeyCode.V))
+            AttackMelee();
     }
 
     void FixedUpdate()
@@ -171,6 +176,12 @@ public class PlayerController : MonoBehaviour
 
         fpsCamera.TriggerShake("Jump");
     }
+
+    void AttackMelee()
+    {
+        melee.Attack();
+    }
+
     #endregion
 
     #region Checkers
