@@ -1,6 +1,6 @@
 # Shooter Game
  
-Protytype of FPS Controller
+Prototype of FPS Controller
 
 ![alt text](https://i.imgur.com/MmsLb7A.png)
 ![alt text](https://i.imgur.com/56yVsnR.png)
