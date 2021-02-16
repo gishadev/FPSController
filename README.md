@@ -1,4 +1,4 @@
-# Shooter Game
+# FPS Controller
  
 Prototype of FPS Controller
 
