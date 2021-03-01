@@ -20,5 +20,5 @@ I have several ideas of dynamic fps games, but I don't think I would develop the
 
 ## Screenshots
 
-<img alt="Screenshot" width="450" align="left" src="https://i.imgur.com/MmsLb7A.png">
-<img alt="Screenshot" width="450" align="left" src="https://i.imgur.com/56yVsnR.png">
+<img alt="Screenshot" width="512" align="center" src="https://i.imgur.com/MmsLb7A.png">
+<img alt="Screenshot" width="512" align="center" src="https://i.imgur.com/56yVsnR.png">
