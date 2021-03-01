@@ -1,9 +1,8 @@
 # FPS Controller
  
 Created this controller just for fun. Yeah, it's simple, but it's mine. You can walk, run, jump and even crouch!
-</br>
+
 I have several ideas of dynamic fps games, but I don't think I would develop them soon.
-</br>
 
 ## What I Learned
 * Setting up the fps camera
